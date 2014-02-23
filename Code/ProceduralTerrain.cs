@@ -15,30 +15,30 @@ public class ProceduralTerrain : MonoBehaviour {
         if (wMax <= 0.0f || hMax <= 0.0f)
             return;
 
-        const float scale = 10.0f;
+        const float freq = 10.0f;
+        const float scale = 1.0f;
         float[,] heights = new float[wMax,hMax];
-        Texture2D tex = new Texture2D(wMax,hMax);
 
         for (int h=0; h<hMax; ++h)
             for (int w=0; w<wMax; ++w)
             {
-                heights[w,h] = Mathf.PerlinNoise(((float)w)/wMax*scale, ((float)h)/hMax*scale) * 1.0f;
-                tex.SetPixel(w,h, Color.Lerp(Color.black, Color.white, heights[w,h]));
+                float noise = Mathf.PerlinNoise(((float)w)/wMax*freq, ((float)h)/hMax*freq);
+                heights[h,w] = noise * scale;
             }
 
-        tex.Apply();
-        SplatPrototype splat = new SplatPrototype();
-        splat.texture = tex;
-        terrainComp.terrainData.splatPrototypes = new SplatPrototype[]{ splat };
-
-        float[,,] alphamap = new float[terrainComp.terrainData.alphamapWidth, terrainComp.terrainData.alphamapHeight, 1];
-		
-		// For each point on the alphamap...
-		for (var y = 0; y < terrainComp.terrainData.alphamapHeight; y++)
-			for (var x = 0; x < terrainComp.terrainData.alphamapWidth; x++)
-                alphamap[x,y,0] = 1.0f;
-
-        terrainComp.terrainData.SetAlphamaps(0, 0, alphamap);
         terrainComp.terrainData.SetHeights(0, 0, heights);
+
+        int alphaW = terrainComp.terrainData.alphamapWidth;
+        int alphaH = terrainComp.terrainData.alphamapHeight;
+        float[,,] alphamap = new float[alphaH, alphaW, 2];
+        for (int h=0; h<alphaH; ++h)
+            for (int w=0; w<alphaW; ++w)
+            {
+                float height = terrainComp.terrainData.GetInterpolatedHeight(((float)w)/alphaW, ((float)h)/alphaH) / scale / terrainComp.terrainData.heightmapScale.y;
+                alphamap[h,w,0] = 1.0f - height;
+                alphamap[h,w,1] = height;
+                
+            }
+        terrainComp.terrainData.SetAlphamaps(0, 0, alphamap);
     }
 }
