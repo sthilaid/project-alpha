@@ -6,6 +6,8 @@ public class Player : MonoBehaviour {
     const string HorizontalAxis = "Horizontal";
     const string VerticalAxis   = "Vertical";
     const string JumpAxis       = "Jump";
+
+    public Terrain m_terrain;
     
     void Begin()
     {
