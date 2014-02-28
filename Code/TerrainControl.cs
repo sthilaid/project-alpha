@@ -27,17 +27,21 @@ public class TerrainControl : MonoBehaviour {
     {
         if (m_terrain == null)
             return;
-        
+
+        // Y Zoom movement
+        float dy              = Input.GetAxis(ZoomAxis);
+        float actualZoomSpeed = m_ZoomSpeedFactor * m_terrain.m_Freq * 0.5f * Time.deltaTime;
+
+        m_terrain.m_Freq += dy * actualZoomSpeed;
+
+        // X-Z offset movement
         float dx                = Input.GetAxis(HorizontalAxis);
         float dz                = Input.GetAxis(VerticalAxis);
-        float actualScrollSpeed = m_ScrollSpeedFactor * Time.deltaTime;
+        float actualScrollSpeed = m_ScrollSpeedFactor * m_terrain.m_Freq * 0.5f * Time.deltaTime;
         
         m_terrain.m_Offset.x += dx * actualScrollSpeed;
         m_terrain.m_Offset.y += dz * actualScrollSpeed;
 
-        float dy              = Input.GetAxis(ZoomAxis);
-        float actualZoomSpeed = m_ZoomSpeedFactor * Time.deltaTime;
 
-        m_terrain.m_Freq += dy * actualZoomSpeed;
     }
 }

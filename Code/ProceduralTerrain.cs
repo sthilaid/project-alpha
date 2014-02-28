@@ -28,8 +28,8 @@ public class ProceduralTerrain : MonoBehaviour {
         for (int h=0; h<hMax; ++h)
             for (int w=0; w<wMax; ++w)
             {
-                float x = ((float)w - centerX + m_Offset.x) / wMax * m_Freq;
-                float y = ((float)h - centerY + m_Offset.y) / hMax * m_Freq;
+                float x = (((float)w - centerX) * m_Freq + m_Offset.x) / wMax;
+                float y = (((float)h - centerY) * m_Freq + m_Offset.y) / hMax;
                 float noise = Mathf.PerlinNoise(x, y);
                 heights[h,w] = noise * m_Scale;
             }
