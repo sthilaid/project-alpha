@@ -4,9 +4,15 @@ using System;
 public class ProceduralTerrain : MonoBehaviour {
     public Terrain m_Terrain;
 
-    public float   m_Scale  = 1.0f;
-    public float   m_Freq   = 10.0f;
-    public Vector2 m_Offset = Vector2.zero;
+    public float   m_Scale       = 1.0f;
+    public float   m_Freq        = 10.0f;
+    public Vector2 m_Offset      = Vector2.zero;
+    public float   m_LODDistance = 10.0f;
+
+    protected float GetLOD()
+    {
+        return Mathf.Log(m_Freq) / Mathf.Log(m_LODDistance) + 1;
+    }
     
     public void UpdateTerrain()
     {
@@ -25,14 +31,40 @@ public class ProceduralTerrain : MonoBehaviour {
         float centerX = wMax * 0.5f;
         float centerY = hMax * 0.5f;
 
-        for (int h=0; h<hMax; ++h)
-            for (int w=0; w<wMax; ++w)
+        float currentLOD = GetLOD();
+        float currentLODValue = Mathf.Pow(m_LODDistance, currentLOD);
+        float nextLOD = Mathf.Ceil(currentLOD);
+        // float nextLODFactor = 1.0f / Mathf.Pow(m_LODDistance, nextLOD);
+        Debug.Log("currentLOD: "+currentLOD+" currentLODValue: "+currentLODValue);
+
+        float nextLodFactor = 1.0f;
+        for (int lod=0; lod <= nextLOD; ++lod)
+        {
+            // float effLod = Mathf.Min(lod, currentLOD);
+            // float lodValue = Mathf.Pow(m_LODDistance, effLod);
+
+            float lodValue = Mathf.Pow(m_LODDistance, lod);
+            float lodFactor = 1.0f;
+            if (lod < currentLOD)
             {
-                float x = (((float)w - centerX) * m_Freq + m_Offset.x) / wMax;
-                float y = (((float)h - centerY) * m_Freq + m_Offset.y) / hMax;
-                float noise = Mathf.PerlinNoise(x, y);
-                heights[h,w] = noise * m_Scale;
+                lodFactor = lodValue / currentLODValue;
+                nextLodFactor -= lodFactor;
             }
+            else
+                lodFactor = Mathf.Max(nextLodFactor, 0.001f);
+            
+            float freq = 1 / lodFactor;
+            Debug.Log("lod: "+lod+" lodFactor: "+lodFactor);
+            
+            for (int h=0; h<hMax; ++h)
+                for (int w=0; w<wMax; ++w)
+                {
+                    float x = (((float)w - centerX) * freq + m_Offset.x) / wMax;
+                    float y = (((float)h - centerY) * freq + m_Offset.y) / hMax;
+                    float noise = Mathf.PerlinNoise(x, y);
+                    heights[h,w] += noise * m_Scale * lodFactor;
+                }
+        }
 
         m_Terrain.terrainData.SetHeights(0, 0, heights);
 
